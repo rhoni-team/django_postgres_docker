@@ -1,0 +1,35 @@
+#docker-compose.yml
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: "djangopg"
+    ports:
+      - "8000:8000"
+    volumes:
+      - djangopg:/djangopg
+    command: python manage.py runserver 0.0.0.0:8000            
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: "postgres_db"
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  djangopg:
+  postgres-data:
